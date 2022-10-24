@@ -1,0 +1,25 @@
+name: pipe_bstore_diff
+description: A simple command-line application.
+version: 1.0.0
+# homepage: https://www.example.com
+
+environment:
+  sdk: '>=2.16.2 <3.0.0'
+
+# This example isn't intended for publishing on pub.dev.
+publish_to: none
+
+# dependencies:
+#   path: ^1.8.0
+
+dev_dependencies:
+  lints: ^1.0.0
+  build_cli: ^2.0.0
+  build_runner: ^2.0.6
+dependencies:
+  args: ^2.3.1
+  http: ^0.13.5
+  intl: ^0.17.0
+
+executables:
+  pipe-bstore-diff: main
