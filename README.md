@@ -74,6 +74,10 @@ dart run la_indexex_comparer
 dart compile exe bin/la_indexes_comparer.dart
 ```
 
+## Future steps
+
+If useful, we can integrate this in the [la-toolkit](https://github.com/living-atlases/la-toolkit) as an additional tool or to detect issues. 
+
 ## License
 
 MPL © [Living Atlases](https://living-atlases.gbif.org)
