@@ -10,12 +10,12 @@ import 'package:intl/intl.dart' as intl;
 Future<void> main(List<String> arguments) async {
   exitCode = 0; // presume success
 
-  const bool defaultNoDrs = false;
-  const bool defaultNoSpecies = false;
-  const bool defaultTruncateSpecies = false;
-  const bool defaultNoInst = false;
-  const bool defaultNoLayers = false;
-  const bool defaultNoHubs = false;
+  const bool defaultDrs = true;
+  const bool defaultSpecies = true;
+  const bool defaultTruncateSpecies = true;
+  const bool defaultInst = true;
+  const bool defaultLayers = true;
+  const bool defaultHubs = true;
   const bool defaultCsvFormat = false;
   const bool defaultDebug = false;
 
@@ -28,17 +28,14 @@ Future<void> main(List<String> arguments) async {
         abbr: '2', help: 'Collection B', mandatory: true)
     ..addOption('collectory-url',
         abbr: 'c', help: 'Collectory URL', mandatory: true)
-    ..addFlag('no-drs', help: 'Don\'t compare drs', defaultsTo: defaultNoDrs)
-    ..addFlag('no-species',
-        help: 'Don\'t compare species', defaultsTo: defaultNoSpecies)
+    ..addFlag('drs', help: 'Compare drs', defaultsTo: defaultDrs)
+    ..addFlag('species', help: 'Compare species', defaultsTo: defaultSpecies)
     ..addFlag('truncate-species',
         help: 'Only show the start and end of the comparison of species',
         defaultsTo: defaultTruncateSpecies)
-    ..addFlag('no-inst',
-        help: 'Don\'t compare institutions', defaultsTo: defaultNoInst)
-    ..addFlag('no-layers',
-        help: 'Don\'t compare hubs', defaultsTo: defaultNoLayers)
-    ..addFlag('no-hubs', help: 'Don\'t compare hubs', defaultsTo: defaultNoHubs)
+    ..addFlag('inst', help: 'Compare institutions', defaultsTo: defaultInst)
+    ..addFlag('layers', help: 'Compare hubs', defaultsTo: defaultLayers)
+    ..addFlag('hubs', help: 'Compare hubs', defaultsTo: defaultHubs)
     ..addFlag('csv-format',
         help: 'Print results in CSV format', defaultsTo: defaultCsvFormat)
     ..addFlag('debug',
@@ -54,13 +51,13 @@ Future<void> main(List<String> arguments) async {
     final String collectionA = args['collection-a'] as String;
     final String collectionB = args['collection-b'] as String;
     final collectoryUrl = args['collectory-url'];
-    final compareDrs = !(args['no-drs'] as bool? ?? defaultNoDrs);
-    final compareSpecies = !(args['no-species'] as bool? ?? defaultNoSpecies);
+    final compareDrs = args['drs'] as bool? ?? defaultDrs;
+    final compareSpecies = args['species'] as bool? ?? defaultSpecies;
     final truncateSpecies =
-        !(args['truncate-species'] as bool? ?? defaultTruncateSpecies);
-    final compareInst = !(args['no-inst'] as bool? ?? defaultNoInst);
-    final compareLayers = !(args['no-layers'] as bool? ?? defaultNoLayers);
-    final compareHubs = !(args['no-hubs'] as bool? ?? defaultNoHubs);
+        args['truncate-species'] as bool? ?? defaultTruncateSpecies;
+    final compareInst = args['inst'] as bool? ?? defaultInst;
+    final compareLayers = args['layers'] as bool? ?? defaultLayers;
+    final compareHubs = args['hubs'] as bool? ?? defaultHubs;
     final csvFormat = args['csv-format'] as bool? ?? defaultCsvFormat;
     final debug = args['debug'] as bool? ?? defaultDebug;
 
@@ -105,7 +102,7 @@ class SolrComparator {
     solrS.add(solrB);
     collectionS.add(collectionA);
     collectionS.add(collectionB);
-    titleS.addAll(['solrA $collectionA', 'sorlB $collectionB']);
+    titleS.addAll(['solrA $collectionA', 'solrB $collectionB']);
     Result.csvFormat = csvFormat;
   }
 
@@ -200,7 +197,7 @@ class SolrComparator {
 
   void printHeader() {
     if (csvFormat) {
-      print(';biocache-store;pipelines;difference');
+      print(';${titleS[0]};${titleS[1]};difference');
     } else {
       print('|  |  ${titleS[0]}  | ${titleS[1]} | difference |');
       print(
