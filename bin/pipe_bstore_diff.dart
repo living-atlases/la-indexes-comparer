@@ -96,7 +96,7 @@ class SolrComparator {
     solrS.add(solrB);
     collectionS.add(collectionA);
     collectionS.add(collectionB);
-    titleS.addAll(["collection-1", "collection-2"]);
+    titleS.addAll(['solrA $collectionA', "sorlB $collectionB"]);
     Result.csvFormat = csvFormat;
   }
 
