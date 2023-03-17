@@ -42,7 +42,7 @@ dart run bin/la_indexes_comparer.dart -a https://user:pass@your-solr-index-a -b 
 
 ## Output
 
-It can generate markdown tables (useful for attaching in issues) or CSV tables. See this [sample output](results-sample.md)
+It can generate markdown tables (useful for attaching in issues) or CSV tables. See this [sample output](results-sample.md).
 
 ## Install
 
@@ -50,14 +50,14 @@ Just download a release binary and run it from your computer or a internal serve
 
 ## Development
 
-To use this utility you will need `dart`, follow these steps:
+To use this utility you will need [dart](https://dart.dev/get-dart), follow these steps:
 - Clone this repository:
 ```bash
 git clone https://github.com/living-atlases/la-indexes-comparer.git
 ```
 - Navigate to the cloned repository:
 ```
-cd la_indexex_comparer
+cd la-indexex-comparer
 ```
 - Install the dependencies:
 ```
@@ -65,13 +65,14 @@ dart pub get
 ```
 - Modify and execute this utility from the command line:
 ```
-dart run la_indexex_comparer
+dart run bin/la_indexes_comparer.dart (...)
 ```
 
 ## Compile
 
 ```
 dart compile exe bin/la_indexes_comparer.dart
+cp bin/la_indexes_comparer.exe bin/la_indexes_comparer # only to avoid the .exe
 ```
 
 ## Future steps
