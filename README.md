@@ -46,7 +46,7 @@ It can generate markdown tables (useful for attaching in issues) or CSV tables. 
 
 ## Install
 
-Just download a release binary and run it from your computer or a internal server.
+Just download a [release binary](https://github.com/living-atlases/la-indexes-comparer/releases) and run it from your computer or a internal server.
 
 ## Development
 
