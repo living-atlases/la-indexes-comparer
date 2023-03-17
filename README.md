@@ -7,6 +7,8 @@ This is useful to compare different created indexes and see differences to take 
 ## Usage
 
 ``` bash
+la_indexes_comparer -a https://your-solr-index-a -b https://your-solr-index-b -1 core-or-collection-a -2 core-or-collection-b -c https://collectory.l-a.site -l "cl2,cl3,cl6"
+# or using dart
 dart run bin/la_indexes_comparer.dart -a https://your-solr-index-a -b https://your-solr-index-b -1 core-or-collection-a -2 core-or-collection-b -c https://collectory.l-a.site -l "cl2,cl3,cl6"
 ```
 
@@ -37,7 +39,7 @@ Usage:
 
 Its works also with basic auth:
 ``` 
-dart run bin/la_indexes_comparer.dart -a https://user:pass@your-solr-index-a -b https://user:pass@your-solr-index-b -1 core-or-collection-a -2 core-or-collection-b -c https://collectory.l-a.site -l "cl2,cl3,cl6" 
+la_indexes_comparer -a https://user:pass@your-solr-index-a -b https://user:pass@your-solr-index-b -1 core-or-collection-a -2 core-or-collection-b -c https://collectory.l-a.site -l "cl2,cl3,cl6" 
 ```
 
 ## Output
