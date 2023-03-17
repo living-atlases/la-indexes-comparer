@@ -28,13 +28,15 @@ Future<void> main(List<String> arguments) async {
         abbr: '2', help: 'Collection B', mandatory: true)
     ..addOption('collectory-url',
         abbr: 'c', help: 'Collectory URL', mandatory: true)
+    ..addOption('layers', abbr: 'l', mandatory: true)
     ..addFlag('drs', help: 'Compare drs', defaultsTo: defaultDrs)
     ..addFlag('species', help: 'Compare species', defaultsTo: defaultSpecies)
     ..addFlag('truncate-species',
         help: 'Only show the start and end of the comparison of species',
         defaultsTo: defaultTruncateSpecies)
     ..addFlag('inst', help: 'Compare institutions', defaultsTo: defaultInst)
-    ..addFlag('layers', help: 'Compare hubs', defaultsTo: defaultLayers)
+    ..addFlag('compare-layers',
+        help: 'Compare layers', defaultsTo: defaultLayers)
     ..addFlag('hubs', help: 'Compare hubs', defaultsTo: defaultHubs)
     ..addFlag('csv-format',
         help: 'Print results in CSV format', defaultsTo: defaultCsvFormat)
@@ -56,10 +58,12 @@ Future<void> main(List<String> arguments) async {
     final truncateSpecies =
         args['truncate-species'] as bool? ?? defaultTruncateSpecies;
     final compareInst = args['inst'] as bool? ?? defaultInst;
-    final compareLayers = args['layers'] as bool? ?? defaultLayers;
+    final compareLayers = args['compare-layers'] as bool? ?? defaultLayers;
     final compareHubs = args['hubs'] as bool? ?? defaultHubs;
     final csvFormat = args['csv-format'] as bool? ?? defaultCsvFormat;
     final debug = args['debug'] as bool? ?? defaultDebug;
+    final List<String> layers =
+        args['layers']?.replaceAll(' ', '').split(RegExp(r',|\s')) ?? [];
 
     final SolrComparator comp = SolrComparator(
         solrA: solrA,
@@ -67,6 +71,7 @@ Future<void> main(List<String> arguments) async {
         collectionA: collectionA,
         collectionB: collectionB,
         collectoryUrl: collectoryUrl,
+        layers: layers,
         compareDrs: compareDrs,
         compareSpecies: compareSpecies,
         compareInst: compareInst,
@@ -90,6 +95,7 @@ class SolrComparator {
       required this.collectionA,
       required this.collectionB,
       required this.collectoryUrl,
+      required this.layers,
       required this.compareDrs,
       required this.compareSpecies,
       required this.truncateSpecies,
@@ -124,6 +130,7 @@ class SolrComparator {
   final List<String> solrS = <String>[];
   final List<String> collectionS = <String>[];
   final bool debug;
+  final List<String> layers;
 
   Future<void> run() async {
     if (compareDrs) {
@@ -180,9 +187,9 @@ class SolrComparator {
       reset();
     }
     if (compareLayers) {
-      await getFieldDiff('cl2', 'cl2');
-      await getFieldDiff('cl3', 'cl3');
-      await getFieldDiff('cl6', 'cl6');
+      for (String l in layers) {
+        await getFieldDiff(l, l);
+      }
       printHeader();
       printSorted();
       reset();
