@@ -6,4 +6,4 @@
 build/
 
 .idea/
-bin/pipe_bstore_diff.exe
+bin/la_indexes_comparer.exe
