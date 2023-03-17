@@ -17,6 +17,7 @@ Future<void> main(List<String> arguments) async {
   const bool defaultNoLayers = false;
   const bool defaultNoHubs = false;
   const bool defaultCsvFormat = false;
+  const bool defaultDebug = false;
 
   final parser = ArgParser()
     ..addOption('solr-url-a', abbr: 'a', help: 'Solr URL A', mandatory: true)
@@ -39,7 +40,11 @@ Future<void> main(List<String> arguments) async {
         help: 'Don\'t compare hubs', defaultsTo: defaultNoLayers)
     ..addFlag('no-hubs', help: 'Don\'t compare hubs', defaultsTo: defaultNoHubs)
     ..addFlag('csv-format',
-        help: 'Print results in CSV format', defaultsTo: defaultCsvFormat);
+        help: 'Print results in CSV format', defaultsTo: defaultCsvFormat)
+    ..addFlag('debug',
+        abbr: 'd',
+        help: 'Show some extra debug info',
+        defaultsTo: defaultDebug);
 
   try {
     final args = parser.parse(arguments);
@@ -57,6 +62,7 @@ Future<void> main(List<String> arguments) async {
     final compareLayers = !(args['no-layers'] as bool? ?? defaultNoLayers);
     final compareHubs = !(args['no-hubs'] as bool? ?? defaultNoHubs);
     final csvFormat = args['csv-format'] as bool? ?? defaultCsvFormat;
+    final debug = args['debug'] as bool? ?? defaultDebug;
 
     final SolrComparator comp = SolrComparator(
         solrA: solrA,
@@ -70,11 +76,13 @@ Future<void> main(List<String> arguments) async {
         compareLayers: compareLayers,
         compareHubs: compareHubs,
         truncateSpecies: truncateSpecies,
-        csvFormat: csvFormat);
+        csvFormat: csvFormat,
+        debug: debug);
     comp.run();
   } catch (e) {
     print('Usage: ');
     print(parser.usage);
+    exitCode = 1;
   }
 }
 
@@ -91,12 +99,13 @@ class SolrComparator {
       required this.compareInst,
       required this.compareLayers,
       required this.compareHubs,
-      required this.csvFormat}) {
+      required this.csvFormat,
+      required this.debug}) {
     solrS.add(solrA);
     solrS.add(solrB);
     collectionS.add(collectionA);
     collectionS.add(collectionB);
-    titleS.addAll(['solrA $collectionA', "sorlB $collectionB"]);
+    titleS.addAll(['solrA $collectionA', 'sorlB $collectionB']);
     Result.csvFormat = csvFormat;
   }
 
@@ -117,13 +126,15 @@ class SolrComparator {
   Map<String, Result> results = {};
   final List<String> solrS = <String>[];
   final List<String> collectionS = <String>[];
+  final bool debug;
 
   Future<void> run() async {
     if (compareDrs) {
       await queryTotals(solrS, '/select',
           {'q': '*:*', 'rows': '0', 'wt': 'json', 'facet': 'false'});
       List<dynamic> resources =
-          await urlGet(collectoryUrl, '/ws/dataResource', {}) as List<dynamic>;
+          await urlGet(collectoryUrl, '/ws/dataResource', {}, debug)
+              as List<dynamic>;
       for (var dr in resources) {
         results.putIfAbsent(dr['uid'], () => Result.empty(dr['uid']));
       }
@@ -140,12 +151,18 @@ class SolrComparator {
         }
       }
       Result mapped = Result('Mapped', a).setB(b);
-      // print(mapped);
+      if (debug) {
+        print(mapped);
+      }
       Result unmapped = Result('Unmapped', results.entries.first.value.a - a)
           .setB(results.entries.first.value.b - b);
-      // print(unmapped);
-      var diff = Map.from(results)..removeWhere((e, v) => v.d != 0);
-      //print("results size: ${diff.length}");
+      if (debug) {
+        print(unmapped);
+      }
+      if (debug) {
+        var diff = Map.from(results)..removeWhere((e, v) => v.d != 0);
+        print('results size: ${diff.length}');
+      }
       reset();
     }
     if (compareSpecies) {
@@ -216,14 +233,14 @@ class SolrComparator {
           q: '$field:*',
           facetField: field,
           faceLimit: -1,
-          sort: "index");
+          sort: 'index');
       Map<String, dynamic> drs = response['facet_counts']['facet_fields'][field]
           as Map<String, dynamic>;
       for (var e in drs.entries) {
         String key;
         if (!results.containsKey(e.key)) {
-          // print("${e.key} not found in collectory");
-          key = "~~${e.key}~~";
+          // print('${e.key} not found in collectory');
+          key = '~~${e.key}~~';
           results.putIfAbsent(key, () => Result(key, 0));
         } else {
           key = e.key;
@@ -248,7 +265,7 @@ class SolrComparator {
           q: '$field:*',
           facetField: field,
           faceLimit: -1,
-          sort: "index");
+          sort: 'index');
       Map<String, dynamic> results = response['facet_counts']['facet_fields']
           [field] as Map<String, dynamic>;
       for (var entry in results.entries) {
@@ -258,19 +275,22 @@ class SolrComparator {
   }
 
   Future<bool> isAPipelinesIndex(String solrBase, String collection) async {
-    Uri uri = Uri.https(solrBase, '/solr/$collection/select',
-        {'q': '*:*', 'wt': 'csv', 'rows': '0', 'facet': '', 'fl': 'data*'});
+    Uri uri = asUri(
+        solrBase,
+        '/solr/$collection/select',
+        {'q': '*:*', 'wt': 'csv', 'rows': '0', 'facet': '', 'fl': 'data*'},
+        debug);
     Response response = await http.get(uri);
-    return response.body.contains("dataResourceUid");
+    return response.body.contains('dataResourceUid');
   }
 
   Future<List<void>> queryTotals(
       List<String> solrS, String query, Map<String, String> params) async {
     return await Future.wait(solrS.mapIndexed((i, solrBase) async {
       Map<String, dynamic> response =
-          await urlGet(solrBase, "/solr/${collectionS[i]}$query", params)
+          await urlGet(solrBase, '/solr/${collectionS[i]}$query', params)
               as Map<String, dynamic>;
-      storeResults(totals, response["response"]["numFound"], i);
+      storeResults(totals, response['response']['numFound'], i);
     }));
   }
 
@@ -281,16 +301,20 @@ class SolrComparator {
       required String facetField,
       required int faceLimit,
       required String sort}) async {
-    return await urlGet(solrBase, "/solr/$collection/select", {
-      'q': q,
-      'rows': '0',
-      'wt': 'json',
-      'facet.field': facetField,
-      'facet': 'on',
-      'facet.limit': faceLimit.toString(),
-      'json.nl': 'map',
-      "facet.sort": sort
-    }) as Map<String, dynamic>;
+    return await urlGet(
+        solrBase,
+        '/solr/$collection/select',
+        {
+          'q': q,
+          'rows': '0',
+          'wt': 'json',
+          'facet.field': facetField,
+          'facet': 'on',
+          'facet.limit': faceLimit.toString(),
+          'json.nl': 'map',
+          'facet.sort': sort
+        },
+        debug) as Map<String, dynamic>;
   }
 
   void storeResults(String key, int num, int index) {
@@ -306,18 +330,26 @@ class SolrComparator {
 
   Future<dynamic> urlGet(String base, String path, Map<String, String> params,
       [debug = false]) async {
-    Uri uri =
-        params.isEmpty ? Uri.https(base, path) : Uri.https(base, path, params);
-    if (debug) {
-      print("INFO: Reading url: " + uri.toString());
-    }
+    Uri uri = asUri(base, path, params, debug);
     try {
       Response response = await http.get(uri);
       return jsonDecode(response.body);
     } catch (all) {
-      _handleError('Error reading url: ' + uri.toString() + all.toString());
+      _handleError('Error reading url: $uri$all');
       rethrow;
     }
+  }
+
+  Uri asUri(String base, String path, Map<String, String> params, debug) {
+    Uri uri = Uri.parse(base + path);
+    if (params.isNotEmpty) {
+      uri = uri.replace(queryParameters: params);
+    }
+    uri = uri.replace(scheme: base.startsWith('https') ? 'https' : 'http');
+    if (debug) {
+      print('INFO: Reading url: $uri');
+    }
+    return uri;
   }
 
   void _handleError(String msg) async {
@@ -343,8 +375,8 @@ class Result {
 
   @override
   String toString() => csvFormat
-      ? "$key;${_f(a)};${_f(b)};${d > 0 ? '+' : ''}${_f(d)}"
-      : "|$key|${_f(a)}|${_f(b)}|${d > 0 ? '+' : ''}${_f(d)}|";
+      ? '$key;${_f(a)};${_f(b)};${d > 0 ? '+' : ''}${_f(d)}'
+      : '|$key|${_f(a)}|${_f(b)}|${d > 0 ? '+' : ''}${_f(d)}|';
 
   Result setA(int a) {
     this.a = a;
