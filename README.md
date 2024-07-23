@@ -4,6 +4,8 @@
 
 This is useful to compare different created indexes and see differences to take actions, (like to switch to use a new index).
 
+Note: this tool is also integrated in recent versions of the [la-toolkit](https://github.com/living-atlases/la-toolkit).
+
 ## Usage
 
 ``` bash
